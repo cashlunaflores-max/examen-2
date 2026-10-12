@@ -116,3 +116,55 @@ const crearTarjeta = (serie) => {
     </article>
     `;
 };
+
+/* parte 3 */
+const buscarSeries = async(texto)=>{
+    if (!texto || texto.trim()==='') {
+        return obtenerSeriesPopulares();
+    }
+    const query = encodeURIComponent(texto.trim());
+    const url = `${BASE_URL}/search/tv?api_key=${API_KEY}&language=es-ES&query=${query}`;
+    const respuesta = await fetch(url);
+    if (!respuesta.ok) {
+        throw new Error(`Error HTTP: ${respuesta.status}`);
+    }
+
+    const datos =await respuesta.json();
+    return datos.results;
+};
+let timeoutBusqueda =null;
+
+const manejarBusqueda =(evento) =>{
+    const texto = evento.target.value;
+    clearTimeout(timeoutBusqueda);
+
+    timeoutBusqueda = setTimeout(async () => {
+        mostrarLoading();
+        try {
+            const series= await buscarSeries(texto);
+            ocultarLoading();
+            if (series.length === 0) {
+                seriesGrid.innerHTML = `
+                <p>No se encontraron series para: "${texto}"</p>`;
+                return;
+            }
+            seriesGrid.innerHTML = series.map(crearTarjeta).join('');
+        } catch (error) {
+            mostrarError('Error al buscar las series');
+        }
+    },600);
+};
+
+searchInput.addEventListener('input', manejarBusqueda);
+
+clearBtn.addEventListener('click', async () => {
+    searchInput.value = '';
+    mostrarLoading();
+    try {
+        const series = await obtenerSeriesPopulares();
+        ocultarLoading();
+        seriesGrid.innerHTML = series.map(crearTarjeta).join('');
+    } catch (error) {
+        mostrarError('No se pudieron cargar las series');
+    }
+});
