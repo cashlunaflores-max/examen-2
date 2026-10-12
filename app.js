@@ -98,13 +98,13 @@ iniciar();
 
 /* parte 2 */
 const crearTarjeta = (serie) => {
-    const { name, first_air_date, vote_average, poster_path } = serie;
+    const { id,name, first_air_date, vote_average, poster_path } = serie;
     const anio = first_air_date ? first_air_date.split('-')[0] : 'N/A';
     const imagenUrl = poster_path ? `${IMAGE_URL}${poster_path}` : '';
     const rating = vote_average ? vote_average.toFixed(1) : 'N/A';
     
     return `
-    <article class="serie-card">
+    <article class="serie-card" data-id="${id}">
         <div class="serie-card__poster">
             ${imagenUrl ? `<img class="serie-card__image" src="${imagenUrl}" alt="${name}">` : ''}
             <span class="serie-card__rating">${rating}</span>
@@ -166,5 +166,48 @@ clearBtn.addEventListener('click', async () => {
         seriesGrid.innerHTML = series.map(crearTarjeta).join('');
     } catch (error) {
         mostrarError('No se pudieron cargar las series');
+    }
+});
+
+/* parte 4 */
+const abrirModal=async(idSerie)=>{
+    try {
+        const url =`${BASE_URL}/tv/${idSerie}?api_key=${API_KEY}&language=es-ES`;
+        const respuesta = await fetch(url);
+        if (!respuesta.ok) {
+            throw new Error(`Error HTTP: ${respuesta.status}`);
+        }
+        const serie=await respuesta.json();
+        const generos=serie.genres ? serie.genres.map(g =>g.name).join(', '):'N/A';
+        modalBody.innerHTML =`
+            <h2 class="modal__title">${serie.name}</h2>
+            <p class="modal__subtitle">${serie.tagline || ''}</p>
+            <p class="modal__overview">${serie.overview || 'Sin sinopsis.'}</p>
+            <div class="modal__info">
+                <span><strong>Temporadas:</strong> ${serie.number_of_seasons || 'N/A'}</span>
+                <span><strong>Episodios:</strong> ${serie.number_of_episodes || 'N/A'}</span>
+                <span><strong>Géneros:</strong> ${generos || 'N/A'}</span>
+                <span><strong>Estado:</strong> ${serie.status || 'N/A'}</span>
+            </div>
+        `;
+        modal.classList.add('modal--show');
+    } catch(error){
+        console.error('Error al cargar detalles de la serie', error);
+    }
+};
+
+const cerrarModal=()=>{
+    modal.classList.remove('modal--show');
+};
+
+modalClose.addEventListener('click', cerrarModal);
+modalOverlay.addEventListener('click', cerrarModal);
+seriesGrid.addEventListener('click', (evento) => {
+    const tarjeta = evento.target.closest('.serie-card');
+    if (tarjeta) {
+        const idSerie = tarjeta.dataset.id;
+        if (idSerie) {
+            abrirModal(idSerie);
+        }
     }
 });
