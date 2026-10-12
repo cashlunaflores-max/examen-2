@@ -87,6 +87,15 @@ const iniciar = async () => {
         seriesGrid.innerHTML = series.map(crearTarjeta).join('');
     } catch (error) {
         let mensaje = 'No se pudieron cargar las series';
+        console.log('Error:', error);
+        if (error.message.includes('401')) {
+            console.log('API KEY invalida');
+            mensaje = 'API KEY invalida';
+        }
+        else if (error instanceof TypeError || error.message.includes('fetch') || error.message.includes('NetworkError')) {
+            mensaje = 'error de conexion';
+            console.log('error de conexion');
+        }
         mostrarError(mensaje);
     }
 };
@@ -165,7 +174,17 @@ clearBtn.addEventListener('click', async () => {
         ocultarLoading();
         seriesGrid.innerHTML = series.map(crearTarjeta).join('');
     } catch (error) {
-        mostrarError('No se pudieron cargar las series');
+        let mensaje = 'No se pudieron cargar las series';
+        console.log('Error:', error);
+        if (error.message.includes('401')) {
+            console.log('API KEY invalida');
+            mensaje = 'API KEY invalida';
+        }
+        else if (error instanceof TypeError || error.message.includes('fetch') || error.message.includes('NetworkError')) {
+            mensaje = 'error de conexion';
+            console.log('error de conexion');
+        }
+        mostrarError(mensaje);
     }
 });
 
@@ -211,3 +230,4 @@ seriesGrid.addEventListener('click', (evento) => {
         }
     }
 });
+
